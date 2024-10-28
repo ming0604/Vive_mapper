@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     // Create a ROS publisher for the map topic
     ros::Publisher map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 2,true);
 
-    ros::Rate loop_rate(0.2);  // Publish once per second (0.2hz)
+    ros::Rate loop_rate(0.1);  // Publish once every 10 second (0.1hz)
 
     while (ros::ok()) {
         // Print the current state of the grid map
