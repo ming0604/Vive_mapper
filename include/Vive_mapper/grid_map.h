@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <cmath>
 #include <ros/ros.h>
-#include <nav_msgs/OccupancyGrid.h>
 
 class GridMap 
 {

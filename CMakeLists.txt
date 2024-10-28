@@ -125,12 +125,13 @@ include_directories(
 )
 
 ## Declare a C++ library
-add_library(grid_map_library
+add_library(grid_map_combined_library
             src/${PROJECT_NAME}/grid_map.cpp
+            src/${PROJECT_NAME}/grid_map_mapping.cpp
 )
 
 target_link_libraries(
-  grid_map_library
+  grid_map_combined_library
   ${catkin_LIBRARIES}
 )
 ## Add cmake target dependencies of the library
@@ -147,7 +148,10 @@ add_executable(ros_grid_map_test_publisher src/ros_grid_map_test_publisher.cpp)
 target_link_libraries(ros_grid_map_test_publisher ${catkin_LIBRARIES})
 
 add_executable(grid_map_test src/grid_map_test.cpp)
-target_link_libraries(grid_map_test ${catkin_LIBRARIES} grid_map_library)
+target_link_libraries(grid_map_test ${catkin_LIBRARIES} grid_map_combined_library)
+
+add_executable(grid_map_mapping_test src/grid_map_mapping_test.cpp)
+target_link_libraries(grid_map_mapping_test ${catkin_LIBRARIES} grid_map_combined_library)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
