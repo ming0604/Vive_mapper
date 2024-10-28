@@ -2,13 +2,14 @@
 
 
 GridMap::GridMap(double reso, int w, int h):resolution(reso), width(w), height(h)
-{
+{   
     //origin at the center cell
     origin_x_cells = width/2;
     origin_y_cells = height/2;
     origin_x_meters = origin_x_cells * resolution + 0.5*resolution;
     origin_y_meters = origin_y_cells * resolution + 0.5*resolution;
-
+    ROS_INFO("map constructed with resolution(m): %f, height(cell): %d, width(cell): %d", resolution, height, width);
+    ROS_INFO("Origin is at cell x: %d, y: %d", origin_x_cells, origin_y_cells);
     // Resize the grid and set all cells to 0 (logodds are 0, means that all cells's probability are 0.5 at beginning)
     cells = std::vector<double>(width * height, 0);
 }
@@ -49,8 +50,8 @@ void GridMap::check_and_extend(double x_world, double y_world)
 
     bool extend_map = false;
     int extend_left = 0, extend_right = 0, extend_bottom = 0, extend_top = 0;
-    int new_width, new_height;
-
+    int new_width = width;
+    int new_height = height;
 
     // Check if x coordinate requires map extension
     if (pixel_x < 0) //extend left column
@@ -78,7 +79,7 @@ void GridMap::check_and_extend(double x_world, double y_world)
         origin_y_cells += extend_bottom;
         ROS_INFO("needs bottom extension: %d rows", extend_bottom);
     } 
-    else if (pixel_y >= height) //extend top row
+    else if (pixel_y > height-1) //extend top row
     {
         extend_map = true;
         extend_top = pixel_y - (height - 1);
@@ -91,7 +92,7 @@ void GridMap::check_and_extend(double x_world, double y_world)
     {   
         ROS_INFO("doing map extension");
         std::vector<double> new_cells(new_width * new_height, 0);
-
+        ROS_INFO("new width: %d, new height: %d", new_width, new_height);
         // Copy old map data to the new map
         int new_pixel_x, new_pixel_y;
         for (int y = 0; y < height; y++) 
@@ -101,7 +102,14 @@ void GridMap::check_and_extend(double x_world, double y_world)
                 //only the extension of the left and bottom has different index
                 new_pixel_x = x + extend_left;
                 new_pixel_y = y + extend_bottom;
-                new_cells[new_pixel_x + new_pixel_y * new_width] = cells[pixel_index_to_1Dindex(x, y)];
+                if (new_pixel_x >= 0 && new_pixel_x < new_width && new_pixel_y >= 0 && new_pixel_y < new_height)
+                {
+                    new_cells[new_pixel_x + new_pixel_y * new_width] = cells[pixel_index_to_1Dindex(x, y)];
+                }
+                else
+                {
+                    ROS_WARN("Skipping out-of-bounds copy for cell (%d, %d)", new_pixel_x, new_pixel_y);
+                }
             }
         }
 
@@ -113,6 +121,7 @@ void GridMap::check_and_extend(double x_world, double y_world)
         // Update origin in meters after extension
         origin_x_meters = origin_x_cells * resolution + 0.5*resolution;
         origin_y_meters = origin_y_cells * resolution + 0.5*resolution;
+        ROS_INFO("Origin(cell) after extension x: %d, y: %d", origin_x_cells, origin_y_cells);
     }
 }
 
