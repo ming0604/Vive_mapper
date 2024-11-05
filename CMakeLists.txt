@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   tf2
+  pcl_conversions
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -152,6 +154,10 @@ target_link_libraries(grid_map_test ${catkin_LIBRARIES} grid_map_combined_librar
 
 add_executable(grid_map_mapping_test src/grid_map_mapping_test.cpp)
 target_link_libraries(grid_map_mapping_test ${catkin_LIBRARIES} grid_map_combined_library)
+
+add_executable(Vive_mapper src/Vive_mapper.cpp)
+target_link_libraries(Vive_mapper ${catkin_LIBRARIES} ${PCL_LIBRARIES} grid_map_combined_library)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

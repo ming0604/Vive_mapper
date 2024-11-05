@@ -8,6 +8,8 @@ GridMapMapping::GridMapMapping(double resolution, int width, int height, double 
     logfree = map.probToLogOdds(free_update_prob);
     occ_thres_logodds = map.probToLogOdds(occ_thres_prob);
     free_thres_logodds = map.probToLogOdds(free_thres_prob);
+    ROS_INFO("GridMapMapping initialized with occ_update_prob=%f, free_update_prob=%f ,occ_threshold= %f, free_threshold=%f",
+    occ_update_prob, free_update_prob, occ_thres_prob, free_thres_prob);
 }
 
 GridMapMapping::~GridMapMapping() {}

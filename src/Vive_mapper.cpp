@@ -21,6 +21,8 @@
 #include <pcl/common/transforms.h>
 #include <pcl_conversions/pcl_conversions.h>
 
+#include <memory> 
+
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, geometry_msgs::PoseStamped> MySyncPolicy;
 using namespace std;
 class ViveMapperNode
@@ -46,7 +48,7 @@ class ViveMapperNode
         message_filters::Synchronizer<MySyncPolicy> sync_;
         
         // Map and pose variables
-        GridMapMapping grid_map_mapping_;
+        std::unique_ptr<GridMapMapping> grid_map_mapping_ptr;  //用智能指針,才能在讀到參數後做初始化
         double base_x_, base_y_, base_yaw_;
         double laser_x_, laser_y_, laser_yaw_;
 
@@ -100,8 +102,16 @@ ViveMapperNode::ViveMapperNode():nh_(), private_nh_("~"), tf_listener_(tf_buffer
     scan_pc_on_map_.reset(new pcl::PointCloud<pcl::PointXYZ>);
 
     // Initialize GridMapMapping with provided parameters
-    grid_map_mapping_ = GridMapMapping(resolution_, width_, height_, occ_update_prob_, free_update_prob_, occ_threshold_, free_threshold_);
-
+    //grid_map_mapping_ = GridMapMapping(resolution_, width_, height_, occ_update_prob_, free_update_prob_, occ_threshold_, free_threshold_);
+    grid_map_mapping_ptr = std::make_unique<GridMapMapping>(
+        resolution_, 
+        width_, 
+        height_, 
+        occ_update_prob_, 
+        free_update_prob_, 
+        occ_threshold_, 
+        free_threshold_
+    );
     // Set up ROS map publisher
     map_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
 
@@ -206,7 +216,7 @@ void ViveMapperNode::update_map()
     for (size_t i=0; i<scan_pc_on_map_->size(); i++) 
     {   
         //update map by the start point and end point
-        grid_map_mapping_.updateMap(laser_x_, laser_y_, scan_pc_on_map_->points[i].x, scan_pc_on_map_->points[i].y);
+        grid_map_mapping_ptr->updateMap(laser_x_, laser_y_, scan_pc_on_map_->points[i].x, scan_pc_on_map_->points[i].y);
     }
 }
 
@@ -241,7 +251,7 @@ void ViveMapperNode::syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_m
     ros::Duration update_elapsed_time = end_update_time - start_time;
     ROS_INFO("Time taken for map update: %f seconds", update_elapsed_time.toSec());
     // Publish updated map
-    map_pub_.publish(grid_map_mapping_.toOccupancyGrid());
+    map_pub_.publish(grid_map_mapping_ptr->toOccupancyGrid());
     ROS_INFO("Published updated map to 'map' topic.");
     // End timing
     ros::Time end_time = ros::Time::now();
