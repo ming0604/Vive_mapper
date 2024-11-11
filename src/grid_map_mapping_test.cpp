@@ -8,15 +8,16 @@ int main(int argc, char *argv[])
     ros::NodeHandle nh;
     // Create a ROS publisher to publish the map to the "map" topic
     ros::Publisher map_pub = nh.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+    ros::param::set("use_sim_time", false);
 
-    // Create a GridMapMapping object with specified some properties anf parameters
+    // Create a GridMapMapping object with specified some properties anf parametersㄇ
     double resolution = 0.025;
     int width = 5;
     int height = 9;
-    double occ_update_prob = 0.9;  // Occupied update probability
-    double free_update_prob = 0.1; // Free update probability
-    double occ_threshold = 0.7;    // Occupied threshold probability
-    double free_threshold = 0.3;   // Free threshold probability
+    double occ_update_prob = 0.7;  // Occupied update probability
+    double free_update_prob = 0.4; // Free update probability
+    double occ_threshold = 0.95;    // Occupied threshold probability
+    double free_threshold = 0.15;   // Free threshold probability
 
     GridMapMapping grid_map_mapping(resolution, width, height, occ_update_prob, free_update_prob, occ_threshold, free_threshold);
     map_pub.publish(grid_map_mapping.toOccupancyGrid()); // Publish the original map
@@ -48,6 +49,8 @@ int main(int argc, char *argv[])
         {0.25, -0.5}, // Down slightly Right
         {0.5, -0.25}  // Right-Down slightly Up
     };
+
+    int iteration_cnt = 0;
     while (ros::ok())
     {
 
@@ -65,10 +68,11 @@ int main(int argc, char *argv[])
             // Publish the map
             map_pub.publish(ros_map);
             ROS_INFO("Published grid map in direction (%f, %f)", x_end_world, y_end_world);
-
             ros::spinOnce();
             loop_rate.sleep();
         }
+        iteration_cnt++;
+        ROS_INFO("Iteration %d completed\n", iteration_cnt);
     }
 
     return 0;
