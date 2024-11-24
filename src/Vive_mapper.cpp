@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
@@ -23,14 +24,14 @@
 
 #include <memory> 
 
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, geometry_msgs::PoseStamped> MySyncPolicy;
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::LaserScan, nav_msgs::Odometry> MySyncPolicy;
 using namespace std;
 class ViveMapperNode
 {
     public:
         ViveMapperNode();
         virtual ~ViveMapperNode();
-        void syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_msg, const geometry_msgs::PoseStamped::ConstPtr& base_gt_pose_msg);
+        void syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_msg, const nav_msgs::Odometry::ConstPtr& base_gt_odom_msg);
 
         tf2::Transform createtf2_from_XYyaw(double x, double y, double theta);
         void tf2_listener_laser();
@@ -46,7 +47,7 @@ class ViveMapperNode
         ros::Publisher map_pub_;
         ros::Publisher scan_pc_pub_;
         message_filters::Subscriber<sensor_msgs::LaserScan> scan_sub_;
-        message_filters::Subscriber<geometry_msgs::PoseStamped> base_gt_pose_sub_;
+        message_filters::Subscriber<nav_msgs::Odometry> base_gt_odom_sub_;
         message_filters::Synchronizer<MySyncPolicy> sync_;
         
         // Map and pose variables
@@ -85,14 +86,13 @@ class ViveMapperNode
         std::string laser_frame_id_;
         double stationary_d_threshold_;
         double stationary_a_threshold_;
-        double stationary_duration_;
 
         //other signals
         bool laser_to_base_received_;
 };
 
 
-ViveMapperNode::ViveMapperNode():nh_(), private_nh_("~"), tf_listener_(tf_buffer_), sync_(MySyncPolicy(10), scan_sub_, base_gt_pose_sub_)
+ViveMapperNode::ViveMapperNode():nh_(), private_nh_("~"), tf_listener_(tf_buffer_), sync_(MySyncPolicy(10), scan_sub_, base_gt_odom_sub_)
 {
     // Load parameters
     private_nh_.param("resolution", resolution_, 0.025);
@@ -127,7 +127,7 @@ ViveMapperNode::ViveMapperNode():nh_(), private_nh_("~"), tf_listener_(tf_buffer
 
     // Set up message filters for base pose and LiDAR scan, and register the callback
     scan_sub_.subscribe(nh_, "scan", 1);
-    base_gt_pose_sub_.subscribe(nh_, "base_gt", 1);
+    base_gt_odom_sub_.subscribe(nh_, "base_gt_odom", 1);
     sync_.registerCallback(boost::bind(&ViveMapperNode::syncCallback, this, _1, _2));
     ROS_INFO("ViveMapperNode initialized with stationary distance threshold: %f, stationary_angle_threshold: %f"
     ,stationary_d_threshold_,stationary_a_threshold_);
@@ -287,7 +287,7 @@ bool ViveMapperNode::isStationary(double current_x, double current_y, double cur
     return stationary;
 }
 
-void ViveMapperNode::syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_msg, const geometry_msgs::PoseStamped::ConstPtr& base_gt_pose_msg)
+void ViveMapperNode::syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_msg, const nav_msgs::Odometry::ConstPtr& base_gt_odom_msg)
 {   
     // Start timing
     ros::Time start_time = ros::Time::now();
@@ -304,9 +304,9 @@ void ViveMapperNode::syncCallback(const sensor_msgs::LaserScan::ConstPtr& scan_m
     ROS_INFO("Laser Scan's range min: %f, range max: %f",range_min_ ,range_max_);
 
     // Get base pose
-    base_x_ = base_gt_pose_msg->pose.position.x;
-    base_y_ = base_gt_pose_msg->pose.position.y;
-    base_yaw_ = tf2::getYaw(base_gt_pose_msg->pose.orientation);
+    base_x_ = base_gt_odom_msg->pose.pose.position.x;
+    base_y_ = base_gt_odom_msg->pose.pose.position.y;
+    base_yaw_ = tf2::getYaw(base_gt_odom_msg->pose.pose.orientation);
     ROS_INFO("base_link ground truth pose on map : x=%f, y=%f, yaw=%f",base_x_, base_y_, base_yaw_);
 
     // Check if the base is stationary
