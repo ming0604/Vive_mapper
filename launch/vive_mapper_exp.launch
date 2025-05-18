@@ -3,7 +3,7 @@
     <arg name="scan_topic" default="scan" />
     <arg name="gt_odom_topic" default="base_gt_odom" />
 
-    <arg name="rvizconfig" default="$(find Vive_mapper)/rviz/vive_mappe_exp.rviz"/>
+    <arg name="rvizconfig" default="$(find Vive_mapper)/rviz/vive_mapper_exp.rviz"/>
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
 
     <!-- Launch Vive_mapper node -->
