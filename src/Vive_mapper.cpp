@@ -205,7 +205,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr ViveMapperNode::create_scan_pc()
     // go through all the angles
     for (int i = 0; i < ranges_.size(); i++)
     {   
-        // count the angle od the scan
+        // count the angle of the scan
         angle = laser_angle_min_ + i * laser_angle_increment_;
         if (ranges_[i] < range_max_ && ranges_[i] > range_min_)
         {
