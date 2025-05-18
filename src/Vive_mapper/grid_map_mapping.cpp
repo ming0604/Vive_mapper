@@ -142,7 +142,11 @@ nav_msgs::OccupancyGrid GridMapMapping::toOccupancyGrid() const
     ros_map.info.origin.position.y = -origin_y;
     ros_map.info.origin.position.z = 0.0;
     ROS_INFO("ros grid map origin_x: %f, origin_y: %f", ros_map.info.origin.position.x, ros_map.info.origin.position.y);
-    // Default quaternion is identity(no rotation)
+    // Set the orientation of the map (no rotation)
+    ros_map.info.origin.orientation.x = 0.0;
+    ros_map.info.origin.orientation.y = 0.0;
+    ros_map.info.origin.orientation.z = 0.0;
+    ros_map.info.origin.orientation.w = 1.0;
 
     // Convert log-odds to probability [0, 100] and populate the grid data
     ros_map.data.resize(map.getWidth() * map.getHeight());
